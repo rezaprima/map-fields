@@ -31,12 +31,18 @@ module MapFields
       end
 
       session[:map_fields][:file] = temp_path
-
-      @rows = []
-      FasterCSV.foreach(temp_path) do |row|
-        @rows << row
-        break if @rows.size == 10
+      
+      begin
+        @rows = []
+        FasterCSV.foreach(temp_path) do |row|
+          @rows << row
+          break if @rows.size == 10
+        end
+      rescue FasterCSV::MalformedCSVError => e
+        @map_fields_error = e
+        return
       end
+      
       expected_fields = self.class.read_inheritable_attribute(:map_fields_fields)
       @fields = ([nil] + expected_fields).inject([]){ |o, e| o << [e, o.size]}
       @parameters = []
